@@ -29,10 +29,8 @@
 static const char *SD_TAG = "SD TAG";
 static const char mount_point[] = MOUNT_POINT;
 
-void func(void);
 std::vector<std::string> split(const std::string &line, char delimiter);
-inline std::pair<int, int> compute_distance(int x1, int y1, int x2, int y2);
-bool is_noise(const std::vector<int>& current_row, const std::vector<int>& next_event, int delta);
+
 
 class SDCardInterface{
 private:

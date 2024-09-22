@@ -17,14 +17,6 @@ std::vector<std::string> split(const std::string &line, char delimiter) {
     return tokens;
 }
 
-inline std::pair<int, int> compute_distance(int x1, int y1, int x2, int y2){
-    return std::make_pair(std::abs(x1 - x2), std::abs(y1 - y2));
-}
-
-bool is_noise(const std::vector<int>& current_row, const std::vector<int>& next_event, int delta){
-    std::pair<int, int> distance = compute_distance(current_row[1], current_row[2], next_event[1], next_event[2]);
-}
-
 // class methods definition
 SDCardInterface::SDCardInterface(void){
     esp_err_t ret;
