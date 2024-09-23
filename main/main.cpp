@@ -14,7 +14,7 @@ extern "C"{
 #define EXAMPLE_MAX_CHAR_SIZE   64
 #define MOUNT_POINT             "/sdcard"
 
-static const char *TAG = "example";
+static const char *TAG = "main";
 
 extern "C"{
     void app_main(void);
@@ -24,74 +24,111 @@ void app_main(void)
 {
     SDCardInterface sdcard;
 
-    uint8_t x[10] = {0};
-    uint8_t y[10] = {0};
-
     // Use POSIX and C standard library functions to work with files:
     const char *file_path = MOUNT_POINT"/USER02~1.CSV";
     sdcard.set_file_path(file_path);
 
-    uint8_t start = -1 ;
-    uint8_t x_prev;
-    uint8_t y_prev;
-    uint8_t current_x, current_y;
-    uint8_t temp_x, temp_y;
+    uint8_t x[10] = {0};
+    uint8_t y[10] = {0};
+
+    uint8_t current_x = 0, current_y = 0;
+    uint8_t x_prev = 0, y_prev = 0;
+    uint16_t temp_x = 0, temp_y = 0;
+    uint8_t next_x = 0, next_y = 0;
+    bool has_next = false; 
+    
     uint8_t delta = 5; 
-    std::pair<uint8_t, uint8_t> distance;
-    std::vector<std::pair<uint8_t, uint8_t>> current_chunk; // chunk to store point 
-
-    int count = 0;
     int count_margin = 100; 
-    int chunk_size = 1000;
+    int chunk_size = 200;
+    int count = 0, chunk_index = 0; 
+    
+    std::pair<uint8_t, uint8_t> distance;
 
+    // find start point 
+    int start = -1 ;
     sdcard.read_row_from_csv(x_prev, y_prev);
-    uint8_t counter = 1;
+    uint8_t row_counter = 1;
     while(start == -1){
         sdcard.read_row_from_csv(current_x, current_y);
         distance = compute_distance(x_prev, y_prev, current_x, current_y);
         if (distance.first <= delta && distance.second <= delta){
-            start = counter;
+            start = row_counter;
+            break; // why removed this?
         }
         x_prev = current_x;
         y_prev = current_y;
-        counter ++; 
+        row_counter ++; 
     }
 
     // traverse through each event
-    for(int i = 0; i < 10; i++){
-        sdcard.read_row_from_csv(current_x, current_y);
+    // for(int i = 0; chunk_index < 10; i++, row_counter++){
+    while(chunk_index < 10 ){
+        // read the current row, either form 'next' or new
+        if(has_next){
+            current_x = next_x;
+            current_y = next_y;
+            next_x = 0;
+            next_y = 0;
+            has_next = false;
+        } else if(i == 0){
+
+        } else{
+            sdcard.read_row_from_csv(current_x, current_y);
+        }
+        printf("traverse i: %d | xp %d, yp %d, x %d y %d\n", i, x_prev, y_prev, current_x, current_y);
         distance = compute_distance(x_prev, y_prev, current_x, current_y);
         
         // check if the point is within the threshold 
+        printf("\t distance %d, %d \n", distance.first, distance.second);
         if (distance.first <= delta && distance.second <= delta && count < count_margin){
             temp_x += current_x;
             temp_y += current_y;
+            count++;
+            printf("\t low delta tempx %d tempy %d count %d ", temp_x, temp_y, count );
 
         } else {
             // check if we've reached the las event 
-            if(counter + 1 >= chunk_size){
+            if(row_counter + 1 >= chunk_size){
                 if(count > 1) {
-                    collect_compressed_points(temp_x, temp_y, count, current_chunk);
+                    printf("\tinside the traverse\n");
+                    collect_compressed_points(temp_x, temp_y, count, x[chunk_index], y[chunk_index]);
+                    chunk_index ++;
                 }
                 break;
             } 
-            if(count == 1 && is_noise(x_prev, y_prev, current_x, current_y, delta)){
+            // check for noise
+            sdcard.read_row_from_csv(next_x, next_y); 
+            if(count == 1 && is_noise(current_x, current_y, next_x, next_y, delta)){
+                if(!has_next){
+                    has_next = true;
+                }
                 continue;
             }
 
             // collect the average point 
-            collect_compressed_points(temp_x, temp_y, count, current_chunk); 
+            collect_compressed_points(temp_x, temp_y, count, x[chunk_index], y[chunk_index]); 
+            printf("test test %d %d ", x[chunk_index], y[chunk_index]);
 
             // check if the current chunk is full 
+            chunk_index++; 
+            if(row_counter >= chunk_size){
+                ESP_LOGE(TAG, "row_counter %d, and chunk size %d\n", row_counter, chunk_size);
+                row_counter = 0; 
+            }
+            
+            // reset the baseline and temp values 
+            x_prev = current_x;
+            y_prev = current_y;
 
+            temp_x = current_x;
+            temp_y = current_y;
+
+            count = 1;
         }
-        x_prev = current_x;
-        y_prev = current_y;
-        counter++;
     }
-
+    // */
     for(int i = 0; i < 10 ; i++){
-        printf("data - %d %d \n", x[i], y[i]);
+        printf("\n %d data - %d %d %d ", i, x[i], y[i], sizeof(int));
     }
 
 }
