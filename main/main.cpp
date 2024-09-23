@@ -67,45 +67,40 @@ void app_main(void)
         if(has_next){
             current_x = next_x;
             current_y = next_y;
-            next_x = 0;
-            next_y = 0;
             has_next = false;
-        } else if(i == 0){
-
         } else{
             sdcard.read_row_from_csv(current_x, current_y);
         }
-        printf("traverse i: %d | xp %d, yp %d, x %d y %d\n", i, x_prev, y_prev, current_x, current_y);
+
+        // calculate manhattan distance from previous point 
+        printf("traverse i: %d | xp %d, yp %d, x %d y %d\n", row_counter, x_prev, y_prev, current_x, current_y);
         distance = compute_distance(x_prev, y_prev, current_x, current_y);
         
-        // check if the point is within the threshold 
+        // within delta and under margin? accumulate points 
         printf("\t distance %d, %d \n", distance.first, distance.second);
         if (distance.first <= delta && distance.second <= delta && count < count_margin){
             temp_x += current_x;
             temp_y += current_y;
             count++;
             printf("\t low delta tempx %d tempy %d count %d ", temp_x, temp_y, count );
-
         } else {
-            // check if we've reached the las event 
+            // check if this is the last point in the chunk 
             if(row_counter + 1 >= chunk_size){
                 if(count > 1) {
                     printf("\tinside the traverse\n");
                     collect_compressed_points(temp_x, temp_y, count, x[chunk_index], y[chunk_index]);
-                    chunk_index ++;
+                    // chunk_index ++;
                 }
-                break;
+                break; // exit after processing the final point 
             } 
-            // check for noise
+            // check if current point is noise 
             sdcard.read_row_from_csv(next_x, next_y); 
             if(count == 1 && is_noise(current_x, current_y, next_x, next_y, delta)){
-                if(!has_next){
-                    has_next = true;
-                }
-                continue;
+                has_next = true;
+                continue; // skip this noisy point 
             }
 
-            // collect the average point 
+            // write compressed points and reset counters 
             collect_compressed_points(temp_x, temp_y, count, x[chunk_index], y[chunk_index]); 
             printf("test test %d %d ", x[chunk_index], y[chunk_index]);
 
@@ -116,7 +111,7 @@ void app_main(void)
                 row_counter = 0; 
             }
             
-            // reset the baseline and temp values 
+            // set baseline for next accumulation 
             x_prev = current_x;
             y_prev = current_y;
 
@@ -125,8 +120,9 @@ void app_main(void)
 
             count = 1;
         }
+        row_counter++;
     }
-    // */
+    // output compressed points
     for(int i = 0; i < 10 ; i++){
         printf("\n %d data - %d %d %d ", i, x[i], y[i], sizeof(int));
     }
