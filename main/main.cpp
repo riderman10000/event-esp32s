@@ -11,8 +11,10 @@ extern "C"{
     #include "driver/sdmmc_host.h"
 }
 
-#define EXAMPLE_MAX_CHAR_SIZE   64
 #define MOUNT_POINT             "/sdcard"
+#define TOTAL_DATA              300
+#define CHUNK_SIZE              50
+#define EXAMPLE_MAX_CHAR_SIZE   64
 
 static const char *TAG = "main";
 
@@ -28,8 +30,8 @@ void app_main(void)
     const char *file_path = MOUNT_POINT"/USER02~1.CSV";
     sdcard.set_file_path(file_path);
 
-    uint8_t x[10] = {0};
-    uint8_t y[10] = {0};
+    float x[CHUNK_SIZE] = {0};
+    float y[CHUNK_SIZE] = {0};
 
     uint8_t current_x = 0, current_y = 0;
     uint8_t x_prev = 0, y_prev = 0;
@@ -62,7 +64,7 @@ void app_main(void)
 
     // traverse through each event
     // for(int i = 0; chunk_index < 10; i++, row_counter++){
-    while(chunk_index < 10 ){
+    while(chunk_index < CHUNK_SIZE){
         // read the current row, either form 'next' or new
         if(has_next){
             current_x = next_x;
@@ -82,7 +84,6 @@ void app_main(void)
             temp_x += current_x;
             temp_y += current_y;
             count++;
-            printf("\t low delta tempx %d tempy %d count %d ", temp_x, temp_y, count );
         } else {
             // check if this is the last point in the chunk 
             if(row_counter + 1 >= chunk_size){
@@ -102,7 +103,7 @@ void app_main(void)
 
             // write compressed points and reset counters 
             collect_compressed_points(temp_x, temp_y, count, x[chunk_index], y[chunk_index]); 
-            printf("test test %d %d ", x[chunk_index], y[chunk_index]);
+            printf("test test %f %f ", x[chunk_index], y[chunk_index]);
 
             // check if the current chunk is full 
             chunk_index++; 
@@ -120,11 +121,13 @@ void app_main(void)
 
             count = 1;
         }
+        printf("\t low delta tempx %d tempy %d count %d ", temp_x, temp_y, count );
         row_counter++;
     }
+
     // output compressed points
-    for(int i = 0; i < 10 ; i++){
-        printf("\n %d data - %d %d %d ", i, x[i], y[i], sizeof(int));
+    for(int i = (0+2); i < (20+2) ; i++){
+        printf("\n %d data - %f %f %d ", i, x[i-2], y[i-2], sizeof(int));
     }
 
 }

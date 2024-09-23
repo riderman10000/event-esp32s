@@ -12,9 +12,9 @@ bool is_noise(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, int delta){
     return (distance.first > delta || distance.second > delta);
 }
 
-void collect_compressed_points(uint16_t temp_x, uint16_t temp_y, int count, uint8_t &x, uint8_t &y){
+void collect_compressed_points(uint16_t temp_x, uint16_t temp_y, int count, float &x, float &y){
     ESP_LOGI(EVENT_LIB_TAG, "Collect Compressed points");
-    x = temp_x/count;
-    y = temp_y/count;
-    ESP_LOGI(EVENT_LIB_TAG, "Collect Compressed points %d, %d \n", x, y);
+    x = static_cast<float>(temp_x)/count;
+    y = static_cast<float>(temp_y)/count;
+    ESP_LOGI(EVENT_LIB_TAG, "Collect Compressed points %f, %f \n", x, y);
 }
