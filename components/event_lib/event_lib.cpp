@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "event_lib.h"
+#include "event_lib.hpp"
 
 const char * EVENT_LIB_TAG = "EVENT LIB TAG";
 
