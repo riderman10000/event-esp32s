@@ -1,8 +1,5 @@
-#include <stdio.h>
-#include "event_process.h"
 
-
-#include "opencv2/core.hpp"
+#include "event_process.hpp"
 
 void test_opencv(void)
 {
