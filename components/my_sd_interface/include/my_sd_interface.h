@@ -39,6 +39,8 @@ private:
     // char *mount_point; 
     
 public:
+    int row_counter = -1;
+
     SDCardInterface(void);
     void list_dir(const char* path);
     esp_err_t s_example_write_file(const char *path, char *data);
@@ -49,6 +51,9 @@ public:
     esp_err_t set_file_path(const char *filename, bool skip_header = true);
     esp_err_t read_row_from_csv();
     esp_err_t read_row_from_csv(uint8_t &x, uint8_t &y);
+    esp_err_t read_next_10_row_from_csv();
+    esp_err_t close_set_file();
+
     ~SDCardInterface();
 };
 

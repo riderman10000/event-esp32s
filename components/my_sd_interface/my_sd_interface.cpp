@@ -151,6 +151,7 @@ esp_err_t SDCardInterface::read_from_csv(const char *filename){
 
 // read csv files 
 esp_err_t SDCardInterface::set_file_path(const char *filename, bool skip_header){
+    this->row_counter = -1;
     this->file = fopen(filename, "r");
     if(file == NULL){
         ESP_LOGE(SD_TAG, "failed to open file: %s", filename);
@@ -205,12 +206,43 @@ esp_err_t SDCardInterface::read_row_from_csv(uint8_t &x, uint8_t &y){
         }
         column++;
     }
-    printf("\n");
+    row_counter++;
     return ESP_OK;
 }  
+
+esp_err_t SDCardInterface::close_set_file(){
+    try{
+        fclose(this->file);
+        return ESP_OK;
+    }
+    catch(int error_code){
+        ESP_LOGE(SD_TAG, "Error On closing file, error code %d", error_code);
+        return ESP_FAIL;
+    }
+}
+
+esp_err_t SDCardInterface::read_next_10_row_from_csv(){
+    uint8_t current_x, current_y; 
+    for(int i = 0; i < 10; i++){
+        try{
+            this->read_row_from_csv(current_x, current_y);
+        }catch(int num){
+            ESP_LOGE(SD_TAG, "failed to read from file");
+            return ESP_FAIL;
+        }
+        printf("index: %d, x: %d, y: %d \n", i, current_x, current_y);
+    }
+    return ESP_OK;
+}
 
 SDCardInterface::~SDCardInterface(){
     // all done, umount partition and disable SDMMC peripheral 
     // esp_vfs_fat_sdcard_format(mount_point, this->card);
+    try{
+        fclose(this->file);
+    }
+    catch(int error_code){
+        ESP_LOGE(SD_TAG, "Error On closing file, error code %d", error_code);
+    }
     ESP_LOGI(SD_TAG, "card unmounted");
 }
