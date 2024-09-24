@@ -36,8 +36,6 @@ extern "C"{
 void app_main(void)
 {
     SDCardInterface sdcard;
-
-    cv::Mat imgcopy;
     
     // Use POSIX and C standard library functions to work with files:
     const char *file_path = MOUNT_POINT"/USER02~1.CSV";
