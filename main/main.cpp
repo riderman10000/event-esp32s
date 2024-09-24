@@ -8,9 +8,9 @@
 #define EPS 192
 
 
-#include "my_sd_interface.h"
-#include "event_lib.h"
-#include "event_process.h"
+#include "my_sd_interface.hpp"
+#include "event_lib.hpp"
+#include "event_process.hpp"
 
 extern "C"{
     #include <string.h>
@@ -138,70 +138,6 @@ void app_main(void)
             count = 1;         
         }
 
-        /*
-        // read the current row, either form 'next' or new
-        if(has_next){
-            next_x = next_next_x;
-            next_y = next_next_y;
-            baseline_x = next_next_x;
-            baseline_y = next_next_y;
-            temp_x = next_x;
-            temp_y = next_y;
-            has_next = false;
-
-        } else{
-            sdcard.read_row_from_csv(next_x, next_y);
-            row_counter++;
-        }
-
-        // calculate manhattan distance from previous point 
-        printf("traverse i: %d | xp %d, yp %d, x %d y %d\n", row_counter, baseline_x, baseline_y, next_x, next_y);
-        distance = compute_distance(baseline_x, baseline_y, next_x, next_y);
-        // within delta and under margin? accumulate points 
-        printf("\t distance %d, %d \n", distance.first, distance.second);
-        if (distance.first <= delta && distance.second <= delta && count < count_margin){
-            temp_x += next_x;
-            temp_y += next_y;
-            count++;
-        } else {
-            // check if this is the last point in the chunk 
-            if(row_counter + 1 >= chunk_size){
-                if(count > 1) {
-                    printf("\tinside the traverse\n");
-                    collect_compressed_points(temp_x, temp_y, count, x[chunk_index], y[chunk_index]);
-                    // chunk_index ++;
-                }
-                break; // exit after processing the final point 
-            } 
-            // check if current point is noise 
-            sdcard.read_row_from_csv(next_next_x, next_next_y); 
-            row_counter++;
-
-            if(count == 1 && is_noise(next_x, next_y, next_next_x, next_next_y, delta)){
-                has_next = true;
-                continue; // skip this noisy point 
-            }
-
-            // write compressed points and reset counters 
-            collect_compressed_points(temp_x, temp_y, count, x[chunk_index], y[chunk_index]); 
-            printf("test test %f %f ", x[chunk_index], y[chunk_index]);
-
-            // check if the current chunk is full 
-            chunk_index++; 
-            if(row_counter >= chunk_size){
-                ESP_LOGE(TAG, "row_counter %d, and chunk size %d\n", row_counter, chunk_size);
-                row_counter = 0; 
-            }
-            
-            // set baseline for next accumulation 
-            baseline_x = next_x;
-            baseline_y = next_y;
-
-            temp_x = next_x;
-            temp_y = next_y;
-            count = 1;
-        }
-        // */
         printf("\t low delta tempx %d tempy %d count %d \n", temp_x, temp_y, count );
         printf("\t[*] chunk idx: %d,  count: %d, x1: %d, y1: %d, x2: %d, y2: %d\n",
             chunk_index, count, baseline_x, baseline_y, next_x, next_y);  
@@ -210,5 +146,4 @@ void app_main(void)
     for(int i = (0+2); i < (50+2) ; i++){
         printf("\n %d data - %f %f %d ", i, x[i-2], y[i-2], sizeof(int));
     }
-
 }

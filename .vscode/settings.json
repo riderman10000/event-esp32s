@@ -72,6 +72,11 @@
     "thread": "cpp",
     "cinttypes": "cpp",
     "typeinfo": "cpp",
+    "cfenv": "cpp",
+    "codecvt": "cpp",
+    "complex": "cpp",
+    "typeindex": "cpp",
+    "valarray": "cpp"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM3",
