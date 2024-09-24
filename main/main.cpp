@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "my_sd_interface.h"
 #include "event_lib.h"
 
@@ -10,6 +9,15 @@ extern "C"{
     #include "sdmmc_cmd.h"
     #include "driver/sdmmc_host.h"
 }
+
+#include <Arduino.h>
+
+#undef EPS      // specreg.h defines EPS which interfere with opencv
+#include "opencv2/core.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/imgcodecs.hpp"
+#define EPS 192
+
 
 #define MOUNT_POINT             "/sdcard"
 #define TOTAL_DATA              300
@@ -26,6 +34,8 @@ void app_main(void)
 {
     SDCardInterface sdcard;
 
+    cv::Mat imgcopy;
+    
     // Use POSIX and C standard library functions to work with files:
     const char *file_path = MOUNT_POINT"/USER02~1.CSV";
     sdcard.set_file_path(file_path);
@@ -70,6 +80,7 @@ void app_main(void)
             current_x = next_x;
             current_y = next_y;
             has_next = false;
+
         } else{
             sdcard.read_row_from_csv(current_x, current_y);
         }
@@ -121,7 +132,9 @@ void app_main(void)
 
             count = 1;
         }
-        printf("\t low delta tempx %d tempy %d count %d ", temp_x, temp_y, count );
+        printf("\t low delta tempx %d tempy %d count %d \n", temp_x, temp_y, count );
+        printf("\t[*] count: %d, x1: %d, y1: %d, x2: %d, y2: %d\n", count, x_prev, y_prev, current_x, current_y);
+
         row_counter++;
     }
 
