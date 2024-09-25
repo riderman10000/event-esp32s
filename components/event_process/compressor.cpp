@@ -12,3 +12,10 @@ void Compressor::collect_compressed_points(uint16_t temp_x, uint16_t temp_y, int
             y_out = static_cast<float>(temp_y) / count;
         }
 }
+
+void Compressor::collect_compressed_points(uint16_t temp_x, uint16_t temp_y, int count, float& x_out, float& y_out){
+    if (count > 0) {
+            x_out = static_cast<float>(temp_x) / count;
+            y_out = static_cast<float>(temp_y) / count;
+        }
+}

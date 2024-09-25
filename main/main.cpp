@@ -35,10 +35,19 @@ extern "C"{
 
 void app_main(void)
 {
-    SDCardInterface sdcard;
-    
-    // Use POSIX and C standard library functions to work with files:
+    // SDCardInterface sdcard;
     const char *file_path = MOUNT_POINT"/USER02~1.CSV";
+    EventProcessor event_procesor(file_path, 5, 100);
+    
+    event_procesor.find_start_point();
+    event_procesor.run();
+    event_procesor.output_compressed_points();
+    event_procesor.run();
+    event_procesor.output_compressed_points();
+    
+
+    /*
+    // Use POSIX and C standard library functions to work with files:
     sdcard.set_file_path(file_path);
 
     float x[CHUNK_SIZE] = {0};
@@ -146,4 +155,5 @@ void app_main(void)
     for(int i = (0+2); i < (50+2) ; i++){
         printf("\n %d data - %f %f %d ", i, x[i-2], y[i-2], sizeof(int));
     }
+    // */
 }

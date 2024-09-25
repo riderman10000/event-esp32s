@@ -1,34 +1,39 @@
 #ifndef EVENT_PROCESS_H
 #define EVENT_PROCESS_H
 
-
 #include "opencv2/core.hpp"
 #include "my_sd_interface.hpp"
+#include "compressor.hpp"
+#include "event_lib.hpp"
 
 #define CHUNK_SIZE  100
 
-void test_opencv(void);
-
 class EventProcessor{
 private:
-    SDCardInterface sdcard;    
+    SDCardInterface sdcard;
+    Compressor compressor;
 
-
-    uint8_t baseline_x, baseline_y;
-    uint16_t temp_x, temp_y;
-    uint8_t next_x, next_y;
-    uint8_t next_next_x, next_next_y;
-    bool has_next;
-    int count;
-    int chunk_index;
-    int start;
+    uint8_t baseline_x = 0, baseline_y = 0;
+    uint16_t temp_x = 0, temp_y = 0;
+    uint8_t next_x = 0, next_y = 0;
+    uint8_t next_next_x = 0, next_next_y = 0;
+    bool has_next = false;
+    int count = 0;
+    int chunk_index= 0 ;
+    int start = -1;
     float x[CHUNK_SIZE], y[CHUNK_SIZE];
+    float x_y[CHUNK_SIZE][2] = {0};
+
+    std::pair<uint8_t, uint8_t> distance;
+    uint8_t delta = 5;
 
 public:
-    EventProcessor(const std::string &file_path, uint8_t delta, int count_margin);
-
-
-
+    EventProcessor(const char * file_path, uint8_t delta, int count_margin);
+    void find_start_point();
+    void run();
+    void traverse_events();
+    void process_next_point();
+    void output_compressed_points();
 };
 
 #endif 
