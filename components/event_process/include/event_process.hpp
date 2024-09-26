@@ -6,7 +6,10 @@
 #include "compressor.hpp"
 #include "event_lib.hpp"
 
-#define CHUNK_SIZE  100
+#ifndef CHUNK_SIZE
+    #define CHUNK_SIZE  100
+#endif 
+
 
 class EventProcessor{
 private:
@@ -22,10 +25,12 @@ private:
     int chunk_index= 0 ;
     int start = -1;
     float x[CHUNK_SIZE], y[CHUNK_SIZE];
-    float x_y[CHUNK_SIZE][2] = {0};
 
     std::pair<uint8_t, uint8_t> distance;
     uint8_t delta = 5;
+
+public:
+    float x_y[CHUNK_SIZE][2] = {0};
 
 public:
     EventProcessor(const char * file_path, uint8_t delta, int count_margin);

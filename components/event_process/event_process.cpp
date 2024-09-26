@@ -60,7 +60,7 @@ void EventProcessor::process_next_point(){
         return;
     }
 
-    compressor.collect_compressed_points(temp_x, temp_y, count, x[chunk_index], y[chunk_index]);
+    compressor.collect_compressed_points(temp_x, temp_y, count, x_y[chunk_index][0], x_y[chunk_index][1]);
     chunk_index++;
 
     baseline_x = next_x;
@@ -71,6 +71,6 @@ void EventProcessor::process_next_point(){
 }
 void EventProcessor::output_compressed_points(){
     for (int i = 0; i < CHUNK_SIZE; ++i) {
-        printf("\n data %d - %f %f ", i+2,  x[i], y[i]);
+        printf("\n data %d - %f %f ", i+2,  x_y[i][0], x_y[i][1]);
     }   
 }
