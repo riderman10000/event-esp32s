@@ -1,5 +1,7 @@
 #include "my_sd_interface.hpp"
 
+static const char *SD_TAG = "SD TAG";
+
 void func(void){
 
 }

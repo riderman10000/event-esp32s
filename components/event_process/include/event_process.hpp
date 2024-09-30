@@ -7,7 +7,7 @@
 #include "event_lib.hpp"
 
 #ifndef CHUNK_SIZE
-    #define CHUNK_SIZE  100
+    #define CHUNK_SIZE  2000
 #endif 
 
 
@@ -24,7 +24,7 @@ private:
     int count = 0;
     int chunk_index= 0 ;
     int start = -1;
-    float x[CHUNK_SIZE], y[CHUNK_SIZE];
+    // float x[CHUNK_SIZE], y[CHUNK_SIZE];
 
     std::pair<uint8_t, uint8_t> distance;
     uint8_t delta = 5;

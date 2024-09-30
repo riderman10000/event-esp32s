@@ -27,11 +27,9 @@
     #define EXAMPLE_MAX_CHAR_SIZE    64
 #endif
 
-static const char *SD_TAG = "SD TAG";
 static const char mount_point[] = MOUNT_POINT;
 
 std::vector<std::string> split(const std::string &line, char delimiter);
-
 
 class SDCardInterface{
 private:
