@@ -28,13 +28,14 @@
 #include "my_sd_interface.hpp"
 #include "event_lib.hpp"
 #include "event_process.hpp"
-#include "event_process_ipca.hpp"
+
+// #include ""
 // #include "my_serial.hpp"
 
 extern "C"{
     #include <string.h>
-    #include <sys/unistd.h>
-    #include <sys/stat.h>
+    // #include <sys/unistd.h>
+    // #include <sys/stat.h>
     #include "esp_vfs_fat.h"
     #include "esp_system.h"
     #include "sdmmc_cmd.h"
@@ -67,14 +68,32 @@ void app_main(void)
     float temp_value = 0; 
     float temp_reduced = 0;
     
-    for(int h = 0; h < 2; h++){
+    cv::Mat test_mean;
+    cv::Mat test_eigen_values;
+    cv::Mat test_eigen_vectors;
+
+    cv::Mat data(CHUNK_SIZE, 2, CV_32F); // 100 rows, 2 cols, float type
+    // cv::PCA pca(data, cv::Mat(), cv::PCA::DATA_AS_ROW, 1); // DATA_AS_ROW for rows as samples
+
+    for(int h = 0; h < 20; h++){
         event_procesor.traverse_events();
         // event_procesor.output_compressed_points();
-        cv::Mat data(CHUNK_SIZE, 2, CV_32F, event_procesor.x_y); // 100 rows, 2 cols, float type
+        // cv::Mat data(CHUNK_SIZE, 2, CV_32F, event_procesor.x_y); // 100 rows, 2 cols, float type
+        
+        memcpy(data.data, event_procesor.x_y, sizeof(event_procesor.x_y));
         cv::PCA pca(data, cv::Mat(), cv::PCA::DATA_AS_ROW, 1); // DATA_AS_ROW for rows as samples
-        
+
+        if(h > 0){
+            pca.mean = test_mean;
+            pca.eigenvalues = test_eigen_values;
+            pca.eigenvectors = test_eigen_vectors;
+        }
+
         pca.project(data, reducedData); // Reduced to 1 component
-        
+        test_mean = pca.mean;
+        test_eigen_values = pca.eigenvalues;
+        test_eigen_vectors = pca.eigenvectors;
+
         float alpha = 0.05f;
         
         event_procesor.x_y[0][0] = reducedData.at<float>(0, 0);
@@ -83,7 +102,12 @@ void app_main(void)
         }
 
         for (int i = 1; i < reducedData.rows; ++i){
+            
             event_procesor.x_y[i][0] = alpha * reducedData.at<float>(i, 0) + (1 - alpha) * event_procesor.x_y[i - 1][0] ; 
+            if (event_procesor.x_y[i][0] > 50){
+                ESP_LOGE(TAG, "ERROR on [%d] reduced data %f, ema: %f\n", i, reducedData.at<float>(i,0), event_procesor.x_y[i][0]);
+                sleep(1);
+            }
         }
 
         temp_value = event_procesor.x_y[CHUNK_SIZE - 1][0];
@@ -92,40 +116,9 @@ void app_main(void)
         for (int i = 0; i < reducedData.rows; ++i) {
             // printf("%d, %f\n", i, event_procesor.x_y[i][0]);
             printf("%f,\n", event_procesor.x_y[i][0]);
+            // delayMicroseconds(10);
+            vTaskDelay(5);  // Yield to the OS to reset the watchdog timer
         }
     }
     printf("XendX\n");
-    ESP_LOGI(TAG , "END of Program");
-
-
-
-    // for(int h = 0; h < 2; h++){
-    //     event_procesor.traverse_events();
-    //     // event_procesor.output_compressed_points();
-    //     cv::Mat data(CHUNK_SIZE, 2, CV_32F, event_procesor.x_y); // 100 rows, 2 cols, float type
-    //     cv::PCA pca(data, cv::Mat(), cv::PCA::DATA_AS_ROW, 1); // DATA_AS_ROW for rows as samples
-        
-    //     pca.project(data, reducedData); // Reduced to 1 component
-        
-    //     float alpha = 0.05f;
-        
-    //     event_procesor.x_y[0][0] = reducedData.at<float>(0, 0);
-    //     if(h > 0){
-    //         event_procesor.x_y[0][0] = alpha * temp_reduced + (1 - alpha) * temp_value;
-    //     }
-
-    //     for (int i = 1; i < reducedData.rows; ++i){
-    //         event_procesor.x_y[i][0] = alpha * reducedData.at<float>(i, 0) + (1 - alpha) * event_procesor.x_y[i - 1][0] ; 
-    //     }
-
-    //     temp_value = event_procesor.x_y[CHUNK_SIZE - 1][0];
-    //     temp_reduced = reducedData.at<float>(CHUNK_SIZE - 1, 0);
-    
-    //     for (int i = 0; i < reducedData.rows; ++i) {
-    //         // printf("%d, %f\n", i, event_procesor.x_y[i][0]);
-    //         printf("%f,\n", event_procesor.x_y[i][0]);
-    //     }
-    // }
-    // printf("XendX\n");
-    // ESP_LOGI(TAG , "END of Program");
 }

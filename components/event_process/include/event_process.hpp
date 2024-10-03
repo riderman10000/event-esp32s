@@ -31,14 +31,12 @@ private:
 
 public:
     float x_y[CHUNK_SIZE][2] = {0};
-    float temp_x_y[CHUNK_SIZE/2][2] = {0};
 
 public:
     EventProcessor(const char * file_path, uint8_t delta, int count_margin);
     void find_start_point();
     void run();
     void traverse_events();
-    void modified_traverse_events(int index = 0);
     void process_next_point();
     void output_compressed_points();
 };

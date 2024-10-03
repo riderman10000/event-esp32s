@@ -76,7 +76,8 @@
     "codecvt": "cpp",
     "complex": "cpp",
     "typeindex": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "dense": "cpp"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM3",
