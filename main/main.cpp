@@ -45,6 +45,8 @@ extern "C"{
 
 static const char *TAG = "main";
 
+static const int mean_chunk_size = 100;
+
 extern "C"{
     void app_main(void);
 }
@@ -75,7 +77,7 @@ void app_main(void)
     cv::Mat data(CHUNK_SIZE, 2, CV_32F); // 100 rows, 2 cols, float type
     // cv::PCA pca(data, cv::Mat(), cv::PCA::DATA_AS_ROW, 1); // DATA_AS_ROW for rows as samples
 
-    for(int h = 0; h < 20; h++){
+    for(int h = 0; h < 10; h++){
         event_procesor.traverse_events();
         // event_procesor.output_compressed_points();
         // cv::Mat data(CHUNK_SIZE, 2, CV_32F, event_procesor.x_y); // 100 rows, 2 cols, float type
@@ -113,11 +115,30 @@ void app_main(void)
         temp_value = event_procesor.x_y[CHUNK_SIZE - 1][0];
         temp_reduced = reducedData.at<float>(CHUNK_SIZE - 1, 0);
     
-        for (int i = 0; i < reducedData.rows; ++i) {
-            // printf("%d, %f\n", i, event_procesor.x_y[i][0]);
+        // print the pca data
+        // for (int i = 0; i < reducedData.rows; ++i) {
+        //     // printf("%d, %f\n", i, event_procesor.x_y[i][0]);
+        //     printf("%f,\n", event_procesor.x_y[i][0]);
+        //     // delayMicroseconds(10);
+        //     vTaskDelay(5);  // Yield to the OS to reset the watchdog timer
+        // }
+
+        // compress by mean 
+        int j = 0;
+        // float mean = 0 ;
+        int sum = 0;
+        for(int i = 0; i< reducedData.rows; i++){
+            if((i % mean_chunk_size == 0) && (i != 0)){
+                event_procesor.x_y[j][0] = sum / mean_chunk_size;
+                sum = 0; 
+                j++;    
+            }
+            sum += event_procesor.x_y[i][0];
+        }
+        // print the mean data 
+        for(int i =0; i < j; i++){
             printf("%f,\n", event_procesor.x_y[i][0]);
-            // delayMicroseconds(10);
-            vTaskDelay(5);  // Yield to the OS to reset the watchdog timer
+            vTaskDelay(5); // yield to the os to reset the watchdog timer 
         }
     }
     printf("XendX\n");
