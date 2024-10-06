@@ -30,6 +30,7 @@
 #include "event_process.hpp"
 #include "my_mann_kendall.hpp"
 #include "my_dtw.hpp"
+#include "my_count.hpp"
 
 extern "C"{
     #include <string.h>
@@ -70,6 +71,8 @@ void app_main(void)
 
     // data for the test_data 
     std::vector<double> test_data;
+
+    std::vector<double> temp_average_data_points; 
 
     bool is_end_of_file = false;
     for(int h = 0; h < 30; h++){
@@ -131,6 +134,7 @@ void app_main(void)
         for(int i = 0; i< reducedData.rows; i++){
             if((i % mean_chunk_size == 0) && (i != 0)){
                 event_procesor.x_y[j][0] = sum / mean_chunk_size;
+                temp_average_data_points.push_back(event_procesor.x_y[j][0]);
                 sum = 0; 
                 j++;    
             }

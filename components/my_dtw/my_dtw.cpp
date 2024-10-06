@@ -1,145 +1,58 @@
 #include "my_dtw.hpp"
 
-using namespace std;
 
-// Structure to hold the result of DTW
-struct DTWResult {
-    double distance;
-    std::vector<std::pair<int, int>> path;
-};
-
-// Euclidean distance between two points
+// Helper function to compute Euclidean distance between two points
 double euclideanDistance(double x, double y) {
-    return pow(x - y, 2);
+    return std::sqrt((x - y) * (x - y));
 }
 
-// Base case DTW (dynamic time warping) on two time series
-DTWResult dtw(const std::vector<double>& x, const std::vector<double>& y) {
-    int n = x.size();
-    int m = y.size();
-    std::vector<std::vector<double>> dtw_matrix(n + 1, std::vector<double>(m + 1, std::numeric_limits<double>::infinity()));
-    
-    dtw_matrix[0][0] = 0;
-    
-    for (int i = 1; i <= n; ++i) {
-        for (int j = 1; j <= m; ++j) {
-            double cost = euclideanDistance(x[i - 1], y[j - 1]);
-            dtw_matrix[i][j] = cost + min({dtw_matrix[i - 1][j], dtw_matrix[i][j - 1], dtw_matrix[i - 1][j - 1]});
-        }
-    }
-    
-    // Backtrack to find the optimal path
-    std::vector<std::pair<int, int>> path;
-    int i = n, j = m;
-    while (i > 0 && j > 0) {
-        path.emplace_back(i - 1, j - 1);
-        if (i == 1) --j;
-        else if (j == 1) --i;
-        else {
-            double min_val = min({dtw_matrix[i - 1][j], dtw_matrix[i][j - 1], dtw_matrix[i - 1][j - 1]});
-            if (min_val == dtw_matrix[i - 1][j - 1]) {
-                --i;
-                --j;
-            } else if (min_val == dtw_matrix[i - 1][j]) {
-                --i;
-            } else {
-                --j;
-            }
-        }
-    }
-    reverse(path.begin(), path.end());
-    
-    return {dtw_matrix[n][m], path};
+// Helper function to create a cost matrix for DTW
+std::vector<std::vector<double>> createCostMatrix(int rows, int cols) {
+    std::vector<std::vector<double>> costMatrix(rows, std::vector<double>(cols, std::numeric_limits<double>::infinity()));
+    return costMatrix;
 }
 
-// Downsample the time series by reducing its size by half
-std::vector<double> downsample(const std::vector<double>& series) {
-    std::vector<double> downsampled;
-    for (int i = 0; i < series.size(); i += 2) {
-        downsampled.push_back(series[i]);
-    }
-    return downsampled;
-}
+// Dynamic Time Warping algorithm
+double fastdtw(const std::vector<double>& series1, const std::vector<double>& series2) {
+    int len1 = series1.size();
+    int len2 = series2.size();
 
-// FastDTW implementation
-DTWResult fastDTW(const std::vector<double>& x, const std::vector<double>& y, int radius) {
-    if (x.size() <= radius + 1 || y.size() <= radius + 1) {
-        return dtw(x, y); // Use classic DTW for small sequences
+    // Create the cost matrix
+    std::vector<std::vector<double>> costMatrix = createCostMatrix(len1, len2);
+
+    // Initialize the first cell
+    costMatrix[0][0] = euclideanDistance(series1[0], series2[0]);
+
+    // Fill the cost matrix
+    for (int i = 1; i < len1; i++) {
+        costMatrix[i][0] = costMatrix[i - 1][0] + euclideanDistance(series1[i], series2[0]);
     }
-    
-    // Recursive call with downsampled sequences
-    std::vector<double> downsampled_x = downsample(x);
-    std::vector<double> downsampled_y = downsample(y);
-    
-    DTWResult downsampled_dtw = fastDTW(downsampled_x, downsampled_y, radius);
-    
-    // Now upsample the result (expand the path to match the original size)
-    std::vector<std::pair<int, int>> window;
-    for (const auto& p : downsampled_dtw.path) {
-        int start_x = max(0, 2 * p.first - radius);
-        int end_x = min(static_cast<int>(x.size()), 2 * p.first + radius);
-        int start_y = max(0, 2 * p.second - radius);
-        int end_y = min(static_cast<int>(y.size()), 2 * p.second + radius);
-        for (int i = start_x; i < end_x; ++i) {
-            for (int j = start_y; j < end_y; ++j) {
-                window.emplace_back(i, j);
-            }
+
+    for (int j = 1; j < len2; j++) {
+        costMatrix[0][j] = costMatrix[0][j - 1] + euclideanDistance(series1[0], series2[j]);
+    }
+
+    for (int i = 1; i < len1; i++) {
+        for (int j = 1; j < len2; j++) {
+            double cost = euclideanDistance(series1[i], series2[j]);
+            costMatrix[i][j] = cost + std::min({costMatrix[i - 1][j], costMatrix[i][j - 1], costMatrix[i - 1][j - 1]});
         }
     }
-    
-    // Classic DTW on the small window
-    std::vector<std::vector<double>> dtw_matrix(x.size() + 1, std::vector<double>(y.size() + 1, std::numeric_limits<double>::infinity()));
-    dtw_matrix[0][0] = 0;
-    
-    for (const auto& w : window) {
-        int i = w.first + 1;
-        int j = w.second + 1;
-        double cost = euclideanDistance(x[i - 1], y[j - 1]);
-        dtw_matrix[i][j] = cost + min({dtw_matrix[i - 1][j], dtw_matrix[i][j - 1], dtw_matrix[i - 1][j - 1]});
-    }
-    
-    // Backtrack to find the optimal path
-    std::vector<std::pair<int, int>> path;
-    int i = x.size(), j = y.size();
-    while (i > 0 && j > 0) {
-        path.emplace_back(i - 1, j - 1);
-        if (i == 1) --j;
-        else if (j == 1) --i;
-        else {
-            double min_val = min({dtw_matrix[i - 1][j], dtw_matrix[i][j - 1], dtw_matrix[i - 1][j - 1]});
-            if (min_val == dtw_matrix[i - 1][j - 1]) {
-                --i;
-                --j;
-            } else if (min_val == dtw_matrix[i - 1][j]) {
-                --i;
-            } else {
-                --j;
-            }
-        }
-    }
-    reverse(path.begin(), path.end());
-    
-    return {dtw_matrix[x.size()][y.size()], path};
+
+    // The final DTW distance is the value in the bottom-right cell
+    return costMatrix[len1 - 1][len2 - 1];
 }
 
 // int main() {
-//     // Example time series
-//     vector<double> x = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-//     vector<double> y = {1, 3, 4, 9, 8, 10};
-    
-//     // Radius for FastDTW
-//     int radius = 1;
-    
-//     // Perform FastDTW
-//     DTWResult result = fastDTW(x, y, radius);
-    
+//     // Example time series data
+//     std::vector<double> series1 = {1.0, 2.0, 3.0, 4.0, 5.0};
+//     std::vector<double> series2 = {2.0, 3.0, 4.0, 5.0, 6.0};
+
+//     // Perform DTW
+//     double dtwDistance = dtw(series1, series2);
+
 //     // Output the result
-//     cout << "FastDTW Distance: " << result.distance << endl;
-//     cout << "Path: ";
-//     for (const auto& p : result.path) {
-//         cout << "(" << p.first << "," << p.second << ") ";
-//     }
-//     cout << endl;
-    
+//     std::cout << "DTW Distance: " << dtwDistance << std::endl;
+
 //     return 0;
 // }
