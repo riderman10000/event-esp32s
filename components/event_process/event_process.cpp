@@ -27,14 +27,16 @@ void EventProcessor::find_start_point(){
     sdcard.set_file_path(MOUNT_POINT"/USER02~1.CSV");
 }
 
-void EventProcessor::traverse_events(){
+esp_err_t EventProcessor::traverse_events(){
     while(chunk_index < CHUNK_SIZE){
         if(has_next){
             next_x = next_next_x;
             next_y = next_next_y;
             has_next = false;
         } else {
-            sdcard.read_row_from_csv(next_x, next_y);
+            if(sdcard.read_row_from_csv(next_x, next_y) == ESP_FAIL){
+                return ESP_FAIL;
+            }
         }
         if (sdcard.row_counter < start) {
             continue;
@@ -47,18 +49,23 @@ void EventProcessor::traverse_events(){
             temp_y += next_y;
             count++;
         } else {
-            process_next_point();
+            if(process_next_point() == ESP_FAIL){
+                return ESP_FAIL;
+            }
         }
     }
     chunk_index = 0; // reset the chunk here... 
+    return ESP_OK;
 }
 
-void EventProcessor::process_next_point(){
-    sdcard.read_row_from_csv(next_next_x, next_next_y);
+esp_err_t EventProcessor::process_next_point(){
+    if(sdcard.read_row_from_csv(next_next_x, next_next_y) == ESP_FAIL){
+        return ESP_FAIL;
+    }
     has_next = true;
 
     if (count == 1 && is_noise(next_x, next_y, next_next_x, next_next_y, delta)) {
-        return;
+        return ESP_OK; // it was only the return after adding the fail cause of sdcard read failure 
     }
 
     compressor.collect_compressed_points(temp_x, temp_y, count, x_y[chunk_index][0], x_y[chunk_index][1]);
@@ -68,7 +75,8 @@ void EventProcessor::process_next_point(){
     baseline_y = next_y;
     temp_x = next_x;
     temp_y = next_y;
-    count = 1;    
+    count = 1; 
+    return ESP_OK;   
 }
 void EventProcessor::output_compressed_points(){
     for (int i = 0; i < CHUNK_SIZE; ++i) {

@@ -36,8 +36,8 @@ public:
     EventProcessor(const char * file_path, uint8_t delta, int count_margin);
     void find_start_point();
     void run();
-    void traverse_events();
-    void process_next_point();
+    esp_err_t traverse_events();
+    esp_err_t process_next_point();
     void output_compressed_points();
 };
 

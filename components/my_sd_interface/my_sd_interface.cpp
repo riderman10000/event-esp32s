@@ -187,7 +187,11 @@ esp_err_t SDCardInterface::read_row_from_csv(){
 
 esp_err_t SDCardInterface::read_row_from_csv(uint8_t &x, uint8_t &y){
     char line[256];
-    fgets(line, sizeof(line), this->file);
+    
+    if(fgets(line, sizeof(line), this->file) == NULL){
+        // printf("End of File Handle With Care");
+        return ESP_FAIL;
+    }
     // convert char array to c++ string 
     std::string strLine(line);
     // split the line by commas 
