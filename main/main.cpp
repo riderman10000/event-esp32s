@@ -35,6 +35,7 @@
 extern "C"{
     #include <string.h>
     #include "esp_vfs_fat.h"
+    #include "esp_timer.h"
     #include "esp_system.h"
     #include "sdmmc_cmd.h"
     #include "driver/sdmmc_host.h"
@@ -49,15 +50,24 @@ extern "C"{
 
 void app_main(void)
 {
+    // Start timing
+    int64_t start_time = esp_timer_get_time(); // Get start time in microseconds
+
     // SDCardInterface sdcard;
-    const char *file_path = MOUNT_POINT"/USER02~1.CSV";
+    // const char *file_path = MOUNT_POINT"/USER02~1.CSV";
+    const char *file_path = MOUNT_POINT"/CLASS2/USER023.CSV";
     EventProcessor event_procesor(file_path, 5, 100);
 
     // size_t psram_size = esp_spiram_get_size();
     // printf("PSRAM size: %d bytes\n", psram_size);
     // return; 
 
-    printf("XstartX\n");
+//     SDCardInterface sdcard;
+//     sdcard.list_dir(MOUNT_POINT"/CLASS2");
+// }
+
+// /*
+
     cv::Mat reducedData;
     event_procesor.find_start_point();
     float temp_value = 0; 
@@ -75,6 +85,8 @@ void app_main(void)
     std::vector<double> temp_average_data_points; 
 
     bool is_end_of_file = false;
+    printf("XstartX\n");
+
     for(int h = 0; h < 30; h++){
         vTaskDelay(5);
 
@@ -155,6 +167,7 @@ void app_main(void)
         // get_index_of_bottom_and_top_by_mk(test_data);
 
         for(int i = 0; i < j; i++){
+            printf("%f,\n", event_procesor.x_y[i][0]);
             test_data.push_back((double) event_procesor.x_y[i][0]);
             vTaskDelay(5);
         }
@@ -163,6 +176,18 @@ void app_main(void)
             break;
         }
     }
-    get_index_of_bottom_and_top_by_mk(test_data);
     printf("XendX\n");
+    get_index_of_bottom_and_top_by_mk(test_data);
+
+
+    // End timing
+    int64_t end_time = esp_timer_get_time(); // Get end time in microseconds
+    // Calculate elapsed time
+    int64_t elapsed_time_us = end_time - start_time;
+    // Convert to seconds
+    double elapsed_time_s = elapsed_time_us / 1000000.0; // Convert to seconds
+
+    // Print elapsed time
+    printf("Elapsed time: %lld microseconds (%.6f seconds)\n", elapsed_time_us, elapsed_time_s);
 }
+// */

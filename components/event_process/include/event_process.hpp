@@ -16,6 +16,8 @@ private:
     SDCardInterface sdcard;
     Compressor compressor;
 
+    const char * current_file_path; 
+
     uint8_t baseline_x = 0, baseline_y = 0;
     uint16_t temp_x = 0, temp_y = 0;
     uint8_t next_x = 0, next_y = 0;

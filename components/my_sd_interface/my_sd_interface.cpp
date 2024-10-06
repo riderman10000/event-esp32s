@@ -177,11 +177,11 @@ esp_err_t SDCardInterface::read_row_from_csv(){
     // print each token from the CSV line 
     for(std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it){
         
-        printf("s - %s ", (*it).c_str());
+        // printf("s - %s ", (*it).c_str());
         int test = atoi((*it).c_str());
-        printf("f - %d ", test);
+        // printf("f - %d ", test);
     }
-    printf("\n");
+    // printf("\n");
     return ESP_OK;
 }  
 

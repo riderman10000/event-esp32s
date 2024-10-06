@@ -2,6 +2,7 @@
 
 EventProcessor::EventProcessor(const char * file_path, uint8_t delta, int count_margin): compressor(delta, count_margin), has_next(false), count(0), chunk_index(0), start(-1) {
         sdcard.set_file_path(file_path);
+        current_file_path = file_path;
     }
 
 void EventProcessor::run(){
@@ -24,7 +25,8 @@ void EventProcessor::find_start_point(){
         row_counter++;
     }
     sdcard.close_set_file();
-    sdcard.set_file_path(MOUNT_POINT"/USER02~1.CSV");
+    // sdcard.set_file_path(MOUNT_POINT"/USER025.CSV");
+    sdcard.set_file_path(current_file_path);
 }
 
 esp_err_t EventProcessor::traverse_events(){
