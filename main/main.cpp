@@ -8,9 +8,11 @@
 #define EPS 192
 
 // defines 
-#ifndef MOUNT_POINT
-    #define MOUNT_POINT             "/sdcard"
-#endif
+// #ifndef MOUNT_POINT
+//     #define MOUNT_POINT             "/sdcard"
+// #endif
+
+const char * MOUNT_POINT = "/sdcard"; 
 
 #ifndef TOTAL_DATA
     #define TOTAL_DATA              10000
@@ -55,7 +57,7 @@ void app_main(void)
 
     // SDCardInterface sdcard;
     // const char *file_path = MOUNT_POINT"/USER02~1.CSV";
-    char *file_path = MOUNT_POINT"/CLASS3/USER023.CSV";
+    char *file_path = "/sdcard/CLASS4/USER021.CSV";
     EventProcessor event_procesor(file_path, 5, 100);
 
     // size_t psram_size = esp_spiram_get_size();

@@ -70,7 +70,7 @@ SDCardInterface::SDCardInterface(void){
     // card has been initialized, print its properties 
     sdmmc_card_print_info(stdout, card);
     // list the directory and file in the card. 
-    list_dir(MOUNT_POINT);
+    list_dir(mount_point);
 }
 
 void SDCardInterface::list_dir(const char * path){

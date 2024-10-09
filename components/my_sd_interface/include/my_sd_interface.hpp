@@ -19,15 +19,15 @@
 #include "vector"
 
 
-# ifndef MOUNT_POINT
-    #define MOUNT_POINT             "/sdcard"
-#endif 
+// # ifndef MOUNT_POINT
+//     #define MOUNT_POINT           1 // "/sdcard"
+// #endif 
 
 #ifndef EXAMPLE_MAX_CHAR_SIZE
     #define EXAMPLE_MAX_CHAR_SIZE    64
 #endif
 
-static const char mount_point[] = MOUNT_POINT;
+static const char mount_point[] = "/sdcard";
 
 std::vector<std::string> split(const std::string &line, char delimiter);
 
