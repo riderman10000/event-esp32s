@@ -1,6 +1,6 @@
 #include "event_process.hpp"
 
-EventProcessor::EventProcessor(const char * file_path, uint8_t delta, int count_margin): compressor(delta, count_margin), has_next(false), count(0), chunk_index(0), start(-1) {
+EventProcessor::EventProcessor(char * file_path, uint8_t delta, int count_margin): compressor(delta, count_margin), has_next(false), count(0), chunk_index(0), start(-1) {
         sdcard.set_file_path(file_path);
         current_file_path = file_path;
     }
@@ -84,4 +84,16 @@ void EventProcessor::output_compressed_points(){
     for (int i = 0; i < CHUNK_SIZE; ++i) {
         printf("\n data %d - %f %f ", i+2,  x_y[i][0], x_y[i][1]);
     }   
+}
+
+int EventProcessor::get_current_chunk_index(){
+    return chunk_index;
+}
+
+void EventProcessor::set_chunk_index(int new_chunk_index){
+    chunk_index = new_chunk_index;
+}
+
+long int EventProcessor::get_row_traverse_count(){
+    return sdcard.row_counter;
 }

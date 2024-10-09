@@ -3,6 +3,9 @@
 
 #include "esp_mac.h"
 #include "my_count.hpp"
+#include "esp_system.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 // Mann-Kendall Test Implementation
 // Return 1 for increasing trend, -1 for decreasing trend, 0 for no trend
@@ -126,6 +129,8 @@ void get_index_of_bottom_and_top_by_mk(const std::vector<double>& data) {
     // print the top_win and win_change_data...
     for(int i = 0; i < final_win_change.size(); i++){
         printf("%d,%d,%d\n", i, final_win_change[i], top_win[i]);
+        vTaskDelay(5);
+        
     }
 
     get_dtw_mean_cost(final_win_change, top_win, data);

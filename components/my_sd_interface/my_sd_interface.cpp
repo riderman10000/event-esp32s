@@ -182,6 +182,7 @@ esp_err_t SDCardInterface::read_row_from_csv(){
         // printf("f - %d ", test);
     }
     // printf("\n");
+    this->row_counter++;
     return ESP_OK;
 }  
 

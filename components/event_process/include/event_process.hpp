@@ -35,12 +35,15 @@ public:
     float x_y[CHUNK_SIZE][2] = {0};
 
 public:
-    EventProcessor(const char * file_path, uint8_t delta, int count_margin);
+    EventProcessor(char * file_path, uint8_t delta, int count_margin);
     void find_start_point();
     void run();
     esp_err_t traverse_events();
     esp_err_t process_next_point();
     void output_compressed_points();
+    int get_current_chunk_index();
+    void set_chunk_index(int new_chunk_index);
+    long int get_row_traverse_count();
 };
 
 #endif 

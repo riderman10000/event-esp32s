@@ -55,7 +55,7 @@ void app_main(void)
 
     // SDCardInterface sdcard;
     // const char *file_path = MOUNT_POINT"/USER02~1.CSV";
-    const char *file_path = MOUNT_POINT"/CLASS2/USER023.CSV";
+    char *file_path = MOUNT_POINT"/CLASS3/USER023.CSV";
     EventProcessor event_procesor(file_path, 5, 100);
 
     // size_t psram_size = esp_spiram_get_size();
@@ -84,15 +84,22 @@ void app_main(void)
 
     std::vector<double> temp_average_data_points; 
 
+    // compress by mean 
+        int j = 0;
+        // float mean = 0 ;
+        int sum = 0;
+
     bool is_end_of_file = false;
     printf("XstartX\n");
 
-    for(int h = 0; h < 30; h++){
+    for(int h = 0; !is_end_of_file ; h++){
         vTaskDelay(5);
 
         if(event_procesor.traverse_events() == ESP_FAIL){
             // break;
             is_end_of_file = true;
+            // chunk index 
+            
         }
         // event_procesor.output_compressed_points(); // prints the output of the manhattan compressed points... 
         
@@ -122,8 +129,16 @@ void app_main(void)
             if (event_procesor.x_y[i][0] > 50){
                 // to check if we are getting this issue of event_procesor having values greater than 50 
                 // well it was due to the watch dog timer which throwed an error and that skipped data... 
-                ESP_LOGE(TAG, "ERROR on [%d] reduced data %f, ema: %f\n", i, reducedData.at<float>(i,0), event_procesor.x_y[i][0]);
-                sleep(1);
+                // ESP_LOGE(TAG, "ERROR on [%d] reduced data %f, ema: %f\n", i, reducedData.at<float>(i,0), event_procesor.x_y[i][0]);
+                // sleep(1);
+                // vTaskDelay(100);
+            }
+        }
+        if(is_end_of_file){
+            for(int current_chunk_index = event_procesor.get_current_chunk_index(); 
+                current_chunk_index < CHUNK_SIZE; current_chunk_index++){
+                event_procesor.x_y[current_chunk_index][0] = event_procesor.x_y[event_procesor.get_current_chunk_index()][0];
+                event_procesor.x_y[current_chunk_index][1] = event_procesor.x_y[event_procesor.get_current_chunk_index()][1];
             }
         }
 
@@ -140,11 +155,11 @@ void app_main(void)
         // }
 
         // compress by mean 
-        int j = 0;
+        j = 0;
         // float mean = 0 ;
-        int sum = 0;
+        sum = 0;
         for(int i = 0; i< reducedData.rows; i++){
-            if((i % mean_chunk_size == 0) && (i != 0)){
+            if(((i+1) % mean_chunk_size == 0) && (i != 0)){
                 event_procesor.x_y[j][0] = sum / mean_chunk_size;
                 temp_average_data_points.push_back(event_procesor.x_y[j][0]);
                 sum = 0; 
@@ -167,12 +182,22 @@ void app_main(void)
         // get_index_of_bottom_and_top_by_mk(test_data);
 
         for(int i = 0; i < j; i++){
-            printf("%f,\n", event_procesor.x_y[i][0]);
-            test_data.push_back((double) event_procesor.x_y[i][0]);
-            vTaskDelay(5);
+            // printf("%f,\n", event_procesor.x_y[i][0]);
+            // test_data.push_back((double) event_procesor.x_y[i][0]);
+            
+            printf("%f,\n", temp_average_data_points[i]);
+            test_data.push_back((double) temp_average_data_points[i]);
+
+            if(is_end_of_file ) { //&& (event_procesor.get_current_chunk_index() < i)){
+                // printf("[x]  event current chunk index --- %d --- i -- %d\n", event_procesor.get_current_chunk_index(), i);
+                // break;
+            }
+            vTaskDelay(10);
         }
+        temp_average_data_points.clear();
 
         if(is_end_of_file){
+            printf("end of file");
             break;
         }
     }
@@ -189,5 +214,7 @@ void app_main(void)
 
     // Print elapsed time
     printf("Elapsed time: %lld microseconds (%.6f seconds)\n", elapsed_time_us, elapsed_time_s);
+    printf(" row counter %ld \n", event_procesor.get_row_traverse_count());
+    printf("reduced row value %d", test_data.size());
 }
 // */

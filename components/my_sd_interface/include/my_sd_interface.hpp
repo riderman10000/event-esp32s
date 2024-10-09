@@ -38,7 +38,7 @@ private:
     // char *mount_point; 
     
 public:
-    int row_counter = -1;
+    long int row_counter = -1;
 
     SDCardInterface(void);
     void list_dir(const char* path);
