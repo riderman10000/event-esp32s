@@ -46,6 +46,82 @@ extern "C"{
 static const char *TAG = "main";
 static const int mean_chunk_size = 100;
 
+// #include <opencv2/opencv.hpp>  // Include OpenCV library
+
+// Class to handle incremental calculation of mean and standard deviation using OpenCV
+class IncrementalStatistics {
+public:
+    IncrementalStatistics() : count(0), total_sum(cv::Mat::zeros(1, 1, CV_64F)), total_squared_sum(cv::Mat::zeros(1, 1, CV_64F)) {}
+
+    // Add a chunk of data points
+    void addDataChunk(const cv::Mat& chunk) {
+        cv::Scalar chunk_mean, chunk_stddev;
+
+        // Calculate mean and standard deviation for the current chunk
+        cv::meanStdDev(chunk, chunk_mean, chunk_stddev);
+        std::cout << "mean " << chunk_mean << std::endl;
+        std::cout << "std " << chunk_stddev << std::endl;
+
+        // Update the running totals for mean and squared mean (for variance calculation)
+        double chunk_size = static_cast<double>(chunk.rows * chunk.cols);
+        total_sum.at<double>(0, 0) += chunk_mean[0] * chunk_size;
+        total_squared_sum.at<double>(0, 0) += (chunk_mean[0] * chunk_mean[0] + chunk_stddev[0] * chunk_stddev[0]) * chunk_size;
+        count += chunk_size;
+    }
+
+    // Get the mean
+    double getMean() const {
+        return count > 0 ? total_sum.at<double>(0, 0) / count : 0.0;
+    }
+
+    // Get the variance (unbiased)
+    double getVariance() const {
+        if (count <= 1) return 0.0;
+        double mean = getMean();
+        return (total_squared_sum.at<double>(0, 0) / count) - (mean * mean);
+    }
+
+    // Get the standard deviation
+    double getStandardDeviation() const {
+        return std::sqrt(getVariance());
+    }
+
+private:
+    int count;                      // Total number of data points
+    cv::Mat total_sum;               // Sum of all elements for mean calculation
+    cv::Mat total_squared_sum;       // Sum of squares for variance calculation
+};
+
+// int main() {
+//     IncrementalStatistics stats;
+
+//     // Simulating a large dataset that cannot be processed at once
+//     const int total_data_points = 10000;  // Large dataset
+//     const int chunk_size = 2000;  // Define chunk size based on memory limitations
+
+//     // Randomly simulate chunks of data (this would be real sensor data in practice)
+//     for (int i = 0; i < total_data_points; i += chunk_size) {
+//         int rows = chunk_size;
+//         int cols = 1;  // Assuming 1D data (you can modify this if it's 2D)
+
+//         // Create a chunk of random data (replace this with actual sensor data)
+//         cv::Mat chunk(rows, cols, CV_32F);
+//         cv::randu(chunk, 0, 100);  // Fill the chunk with random numbers between 0 and 100
+
+//         // Add this chunk to the statistics calculator
+//         stats.addDataChunk(chunk);
+//     }
+
+//     // Output the final mean and standard deviation after processing all data
+//     std::cout << "Mean: " << stats.getMean() << std::endl;
+//     std::cout << "Standard Deviation: " << stats.getStandardDeviation() << std::endl;
+
+//     return 0;
+// }
+
+
+
+
 extern "C"{
     void app_main(void);
 }
@@ -79,7 +155,7 @@ void app_main(void)
     cv::Mat test_eigen_values;
     cv::Mat test_eigen_vectors;
 
-    cv::Mat data(CHUNK_SIZE, 2, CV_32F); // 100 rows, 2 cols, float type
+    cv::Mat data(CHUNK_SIZE, 1, CV_32F); // 100 rows, 2 cols, float type
 
     // data for the test_data 
     std::vector<double> test_data;
@@ -90,6 +166,9 @@ void app_main(void)
         int j = 0;
         // float mean = 0 ;
         int sum = 0;
+
+    IncrementalStatistics stats_x;
+    IncrementalStatistics stats_y;
 
     bool is_end_of_file = false;
     printf("XstartX\n");
@@ -104,7 +183,22 @@ void app_main(void)
             
         }
         // event_procesor.output_compressed_points(); // prints the output of the manhattan compressed points... 
-        
+        memcpy(data.data, event_procesor.x, sizeof(event_procesor.x));   
+        // for(int i = 0 ; i < data.rows)    
+        stats_x.addDataChunk(data);
+
+        memcpy(data.data, event_procesor.y, sizeof(event_procesor.y));       
+        stats_y.addDataChunk(data);
+    }
+
+    std::cout << "mean x : " << stats_x.getMean() << std::endl;
+    std::cout << "mean y : " << stats_y.getMean() << std::endl;
+
+    std::cout << "std x : " << stats_x.getStandardDeviation() << std::endl;
+    std::cout << "std y : " << stats_y.getStandardDeviation() << std::endl;
+}
+
+    /*
         memcpy(data.data, event_procesor.x_y, sizeof(event_procesor.x_y));
         cv::PCA pca(data, cv::Mat(), cv::PCA::DATA_AS_ROW, 1); // DATA_AS_ROW for rows as samples
 

@@ -32,7 +32,9 @@ private:
     uint8_t delta = 5;
 
 public:
-    float x_y[CHUNK_SIZE][2] = {0};
+    // float x_y[CHUNK_SIZE][2] = {0};
+    float x[CHUNK_SIZE] = {0};
+    float y[CHUNK_SIZE] = {0};
 
 public:
     EventProcessor(char * file_path, uint8_t delta, int count_margin);
