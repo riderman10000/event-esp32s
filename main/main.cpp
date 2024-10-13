@@ -70,6 +70,8 @@ void app_main(void)
     cv::Mat reducedData;
     event_procesor.find_start_point();
     float temp_value = 0; 
+    float temp_value_x = 0; 
+    float temp_value_y = 0; 
     float temp_reduced = 0;
     
     cv::Mat test_mean;
@@ -110,9 +112,25 @@ void app_main(void)
         // event_procesor.output_compressed_points(); // prints the output of the manhattan compressed points... 
         memcpy(data.data, event_procesor.x, sizeof(event_procesor.x)); 
         // storage_x.addChunk(event_procesor.x, sizeof(event_procesor.x)+ 1);   
+        float alpha = 0.05f;
+        if(h > 0){
+            data.at<float>(0, 0) = alpha * data.at<float>(0, 0) + (1 - alpha) * temp_value_x;
+        }
+        for(int i = 1; i < data.rows; i++){
+            data.at<float>(i, 0) = alpha * data.at<float>(i, 0) + (1 - alpha) * data.at<float>(i - 1, 0);
+        }
+        temp_value_x = data.at<float>(CHUNK_SIZE - 1, 0);
         stats_x.addDataChunk(data);
 
-        memcpy(data.data, event_procesor.y, sizeof(event_procesor.y));     
+        // y-axis
+        memcpy(data.data, event_procesor.y, sizeof(event_procesor.y));
+        if(h > 0){
+            data.at<float>(0, 0) = alpha * data.at<float>(0, 0) + (1 - alpha) * temp_value_y;
+        }
+        for(int i = 1; i < data.rows; i++){
+            data.at<float>(i, 0) = alpha * data.at<float>(i, 0) + (1 - alpha) * data.at<float>(i - 1, 0);
+        }
+        temp_value_y = data.at<float>(CHUNK_SIZE - 1, 0);
         // storage_y.addChunk(event_procesor.x, sizeof(event_procesor.x)+ 1);   
         stats_y.addDataChunk(data);
     }

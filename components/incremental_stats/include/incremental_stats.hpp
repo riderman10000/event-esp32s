@@ -25,7 +25,7 @@ public:
     
 
 private:
-    int count;                      // Total number of data points
+    long int count;                      // Total number of data points
     cv::Mat total_sum;               // Sum of all elements for mean calculation
     cv::Mat total_squared_sum;       // Sum of squares for variance calculation
 };
