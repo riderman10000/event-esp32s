@@ -22,6 +22,8 @@ public:
     // Get the standard deviation
     double getStandardDeviation() const ;
 
+    
+
 private:
     int count;                      // Total number of data points
     cv::Mat total_sum;               // Sum of all elements for mean calculation

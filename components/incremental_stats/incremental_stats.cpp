@@ -9,8 +9,8 @@ void IncrementalStatistics::addDataChunk(const cv::Mat& chunk) {
 
     // Calculate mean and standard deviation for the current chunk
     cv::meanStdDev(chunk, chunk_mean, chunk_stddev);
-    std::cout << "mean " << chunk_mean << std::endl;
-    std::cout << "std " << chunk_stddev << std::endl;
+    // std::cout << "mean " << chunk_mean << std::endl;
+    // std::cout << "std " << chunk_stddev << std::endl;
 
     // Update the running totals for mean and squared mean (for variance calculation)
     double chunk_size = static_cast<double>(chunk.rows * chunk.cols);

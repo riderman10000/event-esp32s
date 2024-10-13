@@ -7,11 +7,6 @@
 // #include "opencv2/imgcodecs.hpp"
 #define EPS 192
 
-// defines 
-// #ifndef MOUNT_POINT
-//     #define MOUNT_POINT             "/sdcard"
-// #endif
-
 const char * MOUNT_POINT = "/sdcard"; 
 
 #ifndef TOTAL_DATA
@@ -34,6 +29,7 @@ const char * MOUNT_POINT = "/sdcard";
 #include "my_dtw.hpp"
 #include "my_count.hpp"
 #include "incremental_stats.hpp"
+#include "psram_interface.hpp"
 
 extern "C"{
     #include <string.h>
@@ -58,7 +54,7 @@ void app_main(void)
 
     // SDCardInterface sdcard;
     // const char *file_path = MOUNT_POINT"/USER02~1.CSV";
-    char *file_path = "/sdcard/CLASS4/USER021.CSV";
+    char *file_path = "/sdcard/CLASS2/USER021.CSV";
     EventProcessor event_procesor(file_path, 5, 100);
 
     // size_t psram_size = esp_spiram_get_size();
@@ -85,18 +81,22 @@ void app_main(void)
     // data for the test_data 
     std::vector<double> test_data;
 
-    std::vector<double> temp_average_data_points; 
+    std::vector<float> temp_average_data_points; 
 
     // compress by mean 
-        int j = 0;
-        // float mean = 0 ;
-        int sum = 0;
+    int j = 0;
+    // float mean = 0 ;
+    int sum = 0;
 
+    // stats to distinguish which signal is needed
     IncrementalStatistics stats_x;
     IncrementalStatistics stats_y;
 
+    // // psram storage 
+    // PSRAMDataStorage storage_x(CHUNK_SIZE);
+    // PSRAMDataStorage storage_y(CHUNK_SIZE);
+
     bool is_end_of_file = false;
-    printf("XstartX\n");
 
     for(int h = 0; !is_end_of_file ; h++){
         vTaskDelay(5);
@@ -108,11 +108,12 @@ void app_main(void)
             
         }
         // event_procesor.output_compressed_points(); // prints the output of the manhattan compressed points... 
-        memcpy(data.data, event_procesor.x, sizeof(event_procesor.x));   
-        // for(int i = 0 ; i < data.rows)    
+        memcpy(data.data, event_procesor.x, sizeof(event_procesor.x)); 
+        // storage_x.addChunk(event_procesor.x, sizeof(event_procesor.x)+ 1);   
         stats_x.addDataChunk(data);
 
-        memcpy(data.data, event_procesor.y, sizeof(event_procesor.y));       
+        memcpy(data.data, event_procesor.y, sizeof(event_procesor.y));     
+        // storage_y.addChunk(event_procesor.x, sizeof(event_procesor.x)+ 1);   
         stats_y.addDataChunk(data);
     }
 
@@ -121,6 +122,71 @@ void app_main(void)
 
     std::cout << "std x : " << stats_x.getStandardDeviation() << std::endl;
     std::cout << "std y : " << stats_y.getStandardDeviation() << std::endl;
+
+    bool select_x = (stats_x.getStandardDeviation() > stats_y.getStandardDeviation());
+    
+    is_end_of_file = false;
+    event_procesor.find_start_point();
+    printf("XstartX\n");
+    for(int h = 0; !is_end_of_file; h++){
+        vTaskDelay(5);
+        if(event_procesor.traverse_events() == ESP_FAIL){
+            is_end_of_file = true;
+        }
+        
+        // starting the exponential mean averaging 
+        if(select_x){
+            memcpy(data.data, event_procesor.x, sizeof(event_procesor.x)); 
+        }else{
+            memcpy(data.data, event_procesor.y, sizeof(event_procesor.y)); 
+        }
+
+        float alpha = 0.05f;
+        if(h > 0){
+            data.at<float>(0, 0) = alpha * data.at<float>(0, 0) + (1 - alpha) * temp_value;
+        }
+        for(int i = 1; i < data.rows; i++){
+            data.at<float>(i, 0) = alpha * data.at<float>(i, 0) + (1 - alpha) * data.at<float>(i - 1, 0);
+        }
+        
+        // handle the end of file 
+        if(is_end_of_file){
+
+        }
+
+        // assigning the value to the previous value to the next 
+        temp_value = data.at<float>(CHUNK_SIZE -1, 0);
+        // compress by mean 
+        j = 0;
+        sum = 0;
+        for(int i = 0; i < data.rows; i++){
+            if((i % mean_chunk_size == 0) && (i != 0)){
+                // data.at<float>(j, 0) = sum / mean_chunk_size;
+                // temp_average_data_points.push_back(data.at<float>(j, 0));
+                temp_average_data_points.push_back(sum / mean_chunk_size);
+                test_data.push_back(sum / mean_chunk_size);
+                sum  = 0 ;
+                j++;
+            }
+            sum += data.at<float>(i, 0);
+        }
+        // print the mean data 
+        // for(int i =0; i < j; i++){
+        //     printf("%f,\n", temp_average_data_points[i]);
+        //     vTaskDelay(5); // yield to the os to reset the watchdog timer 
+        // }
+
+        temp_average_data_points.clear();
+    }
+
+    // print the mean data 
+    for(int i =0; i < test_data.size(); i++){
+        printf("%f,\n", test_data[i]);
+        vTaskDelay(5); // yield to the os to reset the watchdog timer 
+    }
+    printf("XendX\n");
+    get_index_of_bottom_and_top_by_mk(test_data);
+
 }
 
 
