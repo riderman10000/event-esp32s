@@ -5,6 +5,21 @@ EventProcessor::EventProcessor(char * file_path, uint8_t delta, int count_margin
         current_file_path = file_path;
     }
 
+void EventProcessor::reset_processor(){
+    this->has_next = false;
+    this->count = 0 ; 
+    this->chunk_index = 0;
+    this->start = -1; 
+    
+    this->baseline_x = 0, this->baseline_y = 0;
+    this->temp_x = 0, this->temp_y = 0;
+    this->next_x = 0, this->next_y = 0;
+    this->next_next_x = 0, this->next_next_y = 0;
+
+    sdcard.close_set_file();
+    sdcard.set_file_path(current_file_path);
+}
+
 void EventProcessor::run(){
     traverse_events();
     output_compressed_points();
@@ -24,6 +39,7 @@ void EventProcessor::find_start_point(){
         baseline_y = next_y;
         row_counter++;
     }
+    printf("[x] row counter %d, < base x, base y> : <%d, %d> \n", row_counter, baseline_x, baseline_y);
     sdcard.close_set_file();
     // sdcard.set_file_path(MOUNT_POINT"/USER025.CSV");
     sdcard.set_file_path(current_file_path);

@@ -50,11 +50,12 @@ extern "C"{
 void app_main(void)
 {
     // Start timing
+    // esp_bt_controller_disable();
     int64_t start_time = esp_timer_get_time(); // Get start time in microseconds
 
     // SDCardInterface sdcard;
     // const char *file_path = MOUNT_POINT"/USER02~1.CSV";
-    const char *file_dir = "/sdcard/CLASS2/";
+    // const char *file_dir = "/sdcard/CLASS2/";
     char *file_path = "/sdcard/CLASS2/USER021.CSV";
     EventProcessor event_procesor(file_path, 5, 100);
     // event_procesor.list_dir_from_sd(file_dir);
@@ -71,6 +72,7 @@ void app_main(void)
 
     cv::Mat reducedData;
     event_procesor.find_start_point();
+    event_procesor.find_start_point();
     float temp_value = 0; 
     float temp_value_x = 0; 
     float temp_value_y = 0; 
@@ -81,6 +83,7 @@ void app_main(void)
     cv::Mat test_eigen_vectors;
 
     cv::Mat data(CHUNK_SIZE, 1, CV_32F); // 100 rows, 2 cols, float type
+    cv::Mat temp_data(CHUNK_SIZE, 1, CV_32F);
 
     // data for the test_data 
     std::vector<double> test_data;
@@ -101,7 +104,7 @@ void app_main(void)
     // PSRAMDataStorage storage_y(CHUNK_SIZE);
 
     bool is_end_of_file = false;
-    printf("XstartX\n");
+    // printf("XstartX\n");
     for(int h = 0; !is_end_of_file ; h++){
         vTaskDelay(5);
 
@@ -113,11 +116,11 @@ void app_main(void)
         }
         // event_procesor.output_compressed_points(); // prints the output of the manhattan compressed points... 
         memcpy(data.data, event_procesor.x, sizeof(event_procesor.x)); 
-        // print the manhattan data 
-        for(int i =0; i < data.rows; i++){
-            printf("%f,\n", data.at<float>(i, 0));
-            vTaskDelay(5); // yield to the os to reset the watchdog timer 
-        }
+        // // print the manhattan data 
+        // for(int i =0; i < data.rows; i++){
+        //     printf("%f,\n", data.at<float>(i, 0));
+        //     vTaskDelay(1); // yield to the os to reset the watchdog timer 
+        // }
 
         // storage_x.addChunk(event_procesor.x, sizeof(event_procesor.x)+ 1);   
         float alpha = 0.05f;
@@ -143,7 +146,7 @@ void app_main(void)
         // storage_y.addChunk(event_procesor.x, sizeof(event_procesor.x)+ 1);   
         stats_y.addDataChunk(data);
     }
-    printf("XendX\n");
+    // printf("XendX\n");
 
     std::cout << "mean x : " << stats_x.getMean() << std::endl;
     std::cout << "mean y : " << stats_y.getMean() << std::endl;
@@ -154,8 +157,10 @@ void app_main(void)
     bool select_x = (stats_x.getStandardDeviation() > stats_y.getStandardDeviation());
     // float mean = (select_x) ? stats_x.getMean() : stats_y.getMean();
     is_end_of_file = false;
-    // printf("XstartX\n");
+    printf("XstartX\n");
+    event_procesor.reset_processor();
     event_procesor.find_start_point();
+
     for(int h = 0; !is_end_of_file; h++){
         vTaskDelay(5);
         if(event_procesor.traverse_events() == ESP_FAIL){
@@ -169,16 +174,28 @@ void app_main(void)
             memcpy(data.data, event_procesor.y, sizeof(event_procesor.y)); 
         }
 
+        // // print the unfiltered values 
+        // for(int i =0; i < data.rows; i++){
+        //     printf("%f,\n", data.at<float>(i, 0));
+        //     vTaskDelay(1); // yield to the os to reset the watchdog timer 
+        // }
+
         float alpha = 0.05f;
         // data.at<float>(0, 0) -= mean; 
         if(h > 0){
-            data.at<float>(0, 0) = alpha * data.at<float>(0, 0) + (1 - alpha) * temp_value;
+            data.at<float>(0, 0) = alpha * data.at<float>(0, 0) + (1 - alpha) * temp_value;             
         }
         for(int i = 1; i < data.rows; i++){
             // data.at<float>(i, 0) -= mean;
             data.at<float>(i, 0) = alpha * data.at<float>(i, 0) + (1 - alpha) * data.at<float>(i - 1, 0);
         }
         
+        // // print the unfiltered values 
+        // for(int i =0; i < data.rows; i++){
+        //     printf("%f,\n", data.at<float>(i, 0));
+        //     vTaskDelay(1); // yield to the os to reset the watchdog timer 
+        // }
+
         // handle the end of file 
         if(is_end_of_file){
 

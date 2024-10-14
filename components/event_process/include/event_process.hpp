@@ -38,6 +38,7 @@ public:
 
 public:
     EventProcessor(char * file_path, uint8_t delta, int count_margin);
+    void reset_processor();
     void find_start_point();
     void run();
     esp_err_t traverse_events();
