@@ -54,18 +54,18 @@ void app_main(void)
 
     // SDCardInterface sdcard;
     // const char *file_path = MOUNT_POINT"/USER02~1.CSV";
-    char *file_path = "/sdcard/CLASS2/USER021.CSV";
+    char *file_path = "/sdcard/USER021.CSV";
     EventProcessor event_procesor(file_path, 5, 100);
 
     // size_t psram_size = esp_spiram_get_size();
     // printf("PSRAM size: %d bytes\n", psram_size);
     // return; 
 
-    // allocate memory for reduced data storage (in PSRAM or DRAM) 
-    float * data_x = (float *)heap_caps_malloc(CHUNK_SIZE * sizeof(float), MALLOC_CAP_SPIRAM);
-    if(data_x == NULL){
-        printf("Failed to allocate PSRAM memory \n");
-    }
+    // // allocate memory for reduced data storage (in PSRAM or DRAM) 
+    // float * data_x = (float *)heap_caps_malloc(CHUNK_SIZE * sizeof(float), MALLOC_CAP_SPIRAM);
+    // if(data_x == NULL){
+    //     printf("Failed to allocate PSRAM memory \n");
+    // }
 
     cv::Mat reducedData;
     event_procesor.find_start_point();
@@ -99,7 +99,6 @@ void app_main(void)
     // PSRAMDataStorage storage_y(CHUNK_SIZE);
 
     bool is_end_of_file = false;
-
     for(int h = 0; !is_end_of_file ; h++){
         vTaskDelay(5);
 
@@ -119,6 +118,7 @@ void app_main(void)
         for(int i = 1; i < data.rows; i++){
             data.at<float>(i, 0) = alpha * data.at<float>(i, 0) + (1 - alpha) * data.at<float>(i - 1, 0);
         }
+
         temp_value_x = data.at<float>(CHUNK_SIZE - 1, 0);
         stats_x.addDataChunk(data);
 
@@ -142,10 +142,10 @@ void app_main(void)
     std::cout << "std y : " << stats_y.getStandardDeviation() << std::endl;
 
     bool select_x = (stats_x.getStandardDeviation() > stats_y.getStandardDeviation());
-    
+    float mean = (select_x) ? stats_x.getMean() : stats_y.getMean();
     is_end_of_file = false;
-    event_procesor.find_start_point();
     printf("XstartX\n");
+    event_procesor.find_start_point();
     for(int h = 0; !is_end_of_file; h++){
         vTaskDelay(5);
         if(event_procesor.traverse_events() == ESP_FAIL){
@@ -159,11 +159,13 @@ void app_main(void)
             memcpy(data.data, event_procesor.y, sizeof(event_procesor.y)); 
         }
 
-        float alpha = 0.05f;
+        float alpha = 0.5f;
+        // data.at<float>(0, 0) -= mean; 
         if(h > 0){
             data.at<float>(0, 0) = alpha * data.at<float>(0, 0) + (1 - alpha) * temp_value;
         }
         for(int i = 1; i < data.rows; i++){
+            // data.at<float>(i, 0) -= mean;
             data.at<float>(i, 0) = alpha * data.at<float>(i, 0) + (1 - alpha) * data.at<float>(i - 1, 0);
         }
         
@@ -189,25 +191,23 @@ void app_main(void)
             sum += data.at<float>(i, 0);
         }
         // print the mean data 
-        // for(int i =0; i < j; i++){
-        //     printf("%f,\n", temp_average_data_points[i]);
-        //     vTaskDelay(5); // yield to the os to reset the watchdog timer 
-        // }
+        for(int i =0; i < j; i++){
+            printf("%f,\n", temp_average_data_points[i]);
+            vTaskDelay(5); // yield to the os to reset the watchdog timer 
+        }
 
         temp_average_data_points.clear();
     }
 
     // print the mean data 
-    for(int i =0; i < test_data.size(); i++){
-        printf("%f,\n", test_data[i]);
-        vTaskDelay(5); // yield to the os to reset the watchdog timer 
-    }
+    // for(int i =0; i < test_data.size(); i++){
+    //     printf("%f,\n", test_data[i]);
+    //     vTaskDelay(5); // yield to the os to reset the watchdog timer 
+    // }
     printf("XendX\n");
     get_index_of_bottom_and_top_by_mk(test_data);
 
 }
-
-
 
 
     /*
