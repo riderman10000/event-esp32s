@@ -54,8 +54,10 @@ void app_main(void)
 
     // SDCardInterface sdcard;
     // const char *file_path = MOUNT_POINT"/USER02~1.CSV";
+    const char *file_dir = "/sdcard/CLASS2/";
     char *file_path = "/sdcard/CLASS2/USER021.CSV";
     EventProcessor event_procesor(file_path, 5, 100);
+    // event_procesor.list_dir_from_sd(file_dir);
 
     // size_t psram_size = esp_spiram_get_size();
     // printf("PSRAM size: %d bytes\n", psram_size);
@@ -99,6 +101,7 @@ void app_main(void)
     // PSRAMDataStorage storage_y(CHUNK_SIZE);
 
     bool is_end_of_file = false;
+    printf("XstartX\n");
     for(int h = 0; !is_end_of_file ; h++){
         vTaskDelay(5);
 
@@ -110,6 +113,12 @@ void app_main(void)
         }
         // event_procesor.output_compressed_points(); // prints the output of the manhattan compressed points... 
         memcpy(data.data, event_procesor.x, sizeof(event_procesor.x)); 
+        // print the manhattan data 
+        for(int i =0; i < data.rows; i++){
+            printf("%f,\n", data.at<float>(i, 0));
+            vTaskDelay(5); // yield to the os to reset the watchdog timer 
+        }
+
         // storage_x.addChunk(event_procesor.x, sizeof(event_procesor.x)+ 1);   
         float alpha = 0.05f;
         if(h > 0){
@@ -134,6 +143,7 @@ void app_main(void)
         // storage_y.addChunk(event_procesor.x, sizeof(event_procesor.x)+ 1);   
         stats_y.addDataChunk(data);
     }
+    printf("XendX\n");
 
     std::cout << "mean x : " << stats_x.getMean() << std::endl;
     std::cout << "mean y : " << stats_y.getMean() << std::endl;
@@ -144,7 +154,7 @@ void app_main(void)
     bool select_x = (stats_x.getStandardDeviation() > stats_y.getStandardDeviation());
     // float mean = (select_x) ? stats_x.getMean() : stats_y.getMean();
     is_end_of_file = false;
-    printf("XstartX\n");
+    // printf("XstartX\n");
     event_procesor.find_start_point();
     for(int h = 0; !is_end_of_file; h++){
         vTaskDelay(5);
@@ -157,12 +167,6 @@ void app_main(void)
             memcpy(data.data, event_procesor.x, sizeof(event_procesor.x)); 
         }else{
             memcpy(data.data, event_procesor.y, sizeof(event_procesor.y)); 
-        }
-
-        // print the manhattan data 
-        for(int i =0; i < j; i++){
-            printf("%f,\n", data.at<float>(i, 0));
-            vTaskDelay(5); // yield to the os to reset the watchdog timer 
         }
 
         float alpha = 0.05f;

@@ -46,6 +46,8 @@ public:
     int get_current_chunk_index();
     void set_chunk_index(int new_chunk_index);
     long int get_row_traverse_count();
+
+    void list_dir_from_sd(const char* path);
 };
 
 #endif 

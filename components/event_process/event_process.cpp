@@ -99,3 +99,7 @@ void EventProcessor::set_chunk_index(int new_chunk_index){
 long int EventProcessor::get_row_traverse_count(){
     return sdcard.row_counter;
 }
+
+void EventProcessor::list_dir_from_sd(const char* path){
+    sdcard.list_dir(path);
+}
