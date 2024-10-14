@@ -227,10 +227,10 @@ void app_main(void)
     }
 
     // print the mean data 
-    // for(int i =0; i < test_data.size(); i++){
-    //     printf("%f,\n", test_data[i]);
-    //     vTaskDelay(5); // yield to the os to reset the watchdog timer 
-    // }
+    for(int i =0; i < test_data.size(); i++){
+        printf("%f,\n", test_data[i]);
+        vTaskDelay(5); // yield to the os to reset the watchdog timer 
+    }
     printf("XendX\n");
     get_index_of_bottom_and_top_by_mk(test_data);
 
