@@ -54,7 +54,7 @@ void app_main(void)
 
     // SDCardInterface sdcard;
     // const char *file_path = MOUNT_POINT"/USER02~1.CSV";
-    char *file_path = "/sdcard/USER021.CSV";
+    char *file_path = "/sdcard/CLASS2/USER021.CSV";
     EventProcessor event_procesor(file_path, 5, 100);
 
     // size_t psram_size = esp_spiram_get_size();
@@ -142,7 +142,7 @@ void app_main(void)
     std::cout << "std y : " << stats_y.getStandardDeviation() << std::endl;
 
     bool select_x = (stats_x.getStandardDeviation() > stats_y.getStandardDeviation());
-    float mean = (select_x) ? stats_x.getMean() : stats_y.getMean();
+    // float mean = (select_x) ? stats_x.getMean() : stats_y.getMean();
     is_end_of_file = false;
     printf("XstartX\n");
     event_procesor.find_start_point();
@@ -159,7 +159,13 @@ void app_main(void)
             memcpy(data.data, event_procesor.y, sizeof(event_procesor.y)); 
         }
 
-        float alpha = 0.5f;
+        // print the manhattan data 
+        for(int i =0; i < j; i++){
+            printf("%f,\n", data.at<float>(i, 0));
+            vTaskDelay(5); // yield to the os to reset the watchdog timer 
+        }
+
+        float alpha = 0.05f;
         // data.at<float>(0, 0) -= mean; 
         if(h > 0){
             data.at<float>(0, 0) = alpha * data.at<float>(0, 0) + (1 - alpha) * temp_value;
@@ -175,7 +181,7 @@ void app_main(void)
         }
 
         // assigning the value to the previous value to the next 
-        temp_value = data.at<float>(CHUNK_SIZE -1, 0);
+        temp_value = data.at<float>(CHUNK_SIZE - 1, 0);
         // compress by mean 
         j = 0;
         sum = 0;
@@ -190,11 +196,11 @@ void app_main(void)
             }
             sum += data.at<float>(i, 0);
         }
-        // print the mean data 
-        for(int i =0; i < j; i++){
-            printf("%f,\n", temp_average_data_points[i]);
-            vTaskDelay(5); // yield to the os to reset the watchdog timer 
-        }
+        // // print the mean data 
+        // for(int i =0; i < j; i++){
+        //     printf("%f,\n", temp_average_data_points[i]);
+        //     vTaskDelay(5); // yield to the os to reset the watchdog timer 
+        // }
 
         temp_average_data_points.clear();
     }
