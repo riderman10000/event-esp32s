@@ -49,15 +49,14 @@ extern "C"{
 
 void app_main(void)
 {
-    // Start timing
-    // esp_bt_controller_disable();
-    int64_t start_time = esp_timer_get_time(); // Get start time in microseconds
-
     // SDCardInterface sdcard;
     // const char *file_path = MOUNT_POINT"/USER02~1.CSV";
     // const char *file_dir = "/sdcard/CLASS2/";
-    char *file_path = "/sdcard/CLASS2/USER021.CSV";
-    EventProcessor event_procesor(file_path, 5, 100);
+
+
+    int64_t start_time = esp_timer_get_time(); // Get start time in microseconds
+    char *file_path =  "/sdcard/CLASS4/USER025.CSV"; // file_paths[file_idx]; // 
+    EventProcessor event_procesor(file_path, 5 ,100);
     // event_procesor.list_dir_from_sd(file_dir);
 
     // size_t psram_size = esp_spiram_get_size();
@@ -71,7 +70,6 @@ void app_main(void)
     // }
 
     cv::Mat reducedData;
-    event_procesor.find_start_point();
     event_procesor.find_start_point();
     float temp_value = 0; 
     float temp_value_x = 0; 
@@ -148,21 +146,21 @@ void app_main(void)
     }
     // printf("XendX\n");
 
-    std::cout << "mean x : " << stats_x.getMean() << std::endl;
-    std::cout << "mean y : " << stats_y.getMean() << std::endl;
+    // std::cout << "mean x : " << stats_x.getMean() << std::endl;
+    // std::cout << "mean y : " << stats_y.getMean() << std::endl;
 
-    std::cout << "std x : " << stats_x.getStandardDeviation() << std::endl;
-    std::cout << "std y : " << stats_y.getStandardDeviation() << std::endl;
+    // std::cout << "std x : " << stats_x.getStandardDeviation() << std::endl;
+    // std::cout << "std y : " << stats_y.getStandardDeviation() << std::endl;
 
     bool select_x = (stats_x.getStandardDeviation() > stats_y.getStandardDeviation());
     // float mean = (select_x) ? stats_x.getMean() : stats_y.getMean();
     is_end_of_file = false;
-    printf("XstartX\n");
+    // printf("XstartX\n");
     event_procesor.reset_processor();
     event_procesor.find_start_point();
 
     for(int h = 0; !is_end_of_file; h++){
-        vTaskDelay(5);
+        vTaskDelay(1);
         if(event_procesor.traverse_events() == ESP_FAIL){
             is_end_of_file = true;
         }
@@ -198,6 +196,7 @@ void app_main(void)
 
         // handle the end of file 
         if(is_end_of_file){
+            event_procesor.close_file();
 
         }
 
@@ -207,6 +206,7 @@ void app_main(void)
         j = 0;
         sum = 0;
         for(int i = 0; i < data.rows; i++){
+            vTaskDelay(1);
             if((i % mean_chunk_size == 0) && (i != 0)){
                 // data.at<float>(j, 0) = sum / mean_chunk_size;
                 // temp_average_data_points.push_back(data.at<float>(j, 0));
@@ -227,13 +227,12 @@ void app_main(void)
     }
 
     // print the mean data 
-    for(int i =0; i < test_data.size(); i++){
-        printf("%f,\n", test_data[i]);
-        vTaskDelay(5); // yield to the os to reset the watchdog timer 
-    }
-    printf("XendX\n");
+    // for(int i =0; i < test_data.size(); i++){
+    //     printf("%f,\n", test_data[i]);
+    //     vTaskDelay(5); // yield to the os to reset the watchdog timer 
+    // }
+    // printf("XendX\n");
     get_index_of_bottom_and_top_by_mk(test_data);
-
 }
 
 

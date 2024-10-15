@@ -49,6 +49,7 @@ public:
     long int get_row_traverse_count();
 
     void list_dir_from_sd(const char* path);
+    void close_file();
 };
 
 #endif 

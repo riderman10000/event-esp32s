@@ -161,7 +161,7 @@ esp_err_t SDCardInterface::set_file_path(const char *filename, bool skip_header)
     }
     if(skip_header){
         this->read_row_from_csv();
-        ESP_LOGI(SD_TAG, "Skipped the header row");
+        // ESP_LOGI(SD_TAG, "Skipped the header row");
     }
     return ESP_OK;
 }
@@ -237,7 +237,7 @@ esp_err_t SDCardInterface::read_next_10_row_from_csv(){
             ESP_LOGE(SD_TAG, "failed to read from file");
             return ESP_FAIL;
         }
-        printf("index: %d, x: %d, y: %d \n", i, current_x, current_y);
+        // printf("index: %d, x: %d, y: %d \n", i, current_x, current_y);
     }
     return ESP_OK;
 }
